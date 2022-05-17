@@ -19,9 +19,6 @@ public class StudentEntity {
 	private String address;
 	private Integer age;
 	
-//	@Transient
-//	private List<Subjects> subjects;
-	
 	@Transient
 	private List<Map<String, Double>> subjects;
 
@@ -70,15 +67,5 @@ public class StudentEntity {
 		return "StudentEntity [id=" + id + ", name=" + name + ", address=" + address + ", age=" + age + ", subjects="
 				+ subjects + "]";
 	}
-
-//	public List<Subjects> getSubjects() {
-//		return subjects;
-//	}
-//
-//	public void setSubjects(List<Subjects> subjects) {
-//		this.subjects = subjects;
-//	}
-	
-	
 
 }

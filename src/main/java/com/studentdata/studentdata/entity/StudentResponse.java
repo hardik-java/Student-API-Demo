@@ -35,6 +35,7 @@ public class StudentResponse {
 	public void setSubjects(List<Map<String, Double>> subjects) {
 		this.subjects = subjects;
 	}
+	
 	@Override
 	public String toString() {
 		return "StudentResponse [name=" + name + ", address=" + address + ", age=" + age + ", subjects=" + subjects

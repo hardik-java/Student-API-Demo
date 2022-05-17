@@ -15,4 +15,5 @@ public class ApplicationConstants {
 	public static final String RESPONSE_STATUS_CODE_SUCCESS_MESSAGE = "Data Saved Successfully !";
 	public static final String RESPONSE_STATUS_CODE_FAILUR_MESSAGE = "Error in Data Save !";
 	public static final String RESPONSE_STATUS_CODE_NO_DATA = "No Data Found !";
+	public static final String RESPONSE_STATUS_SUBJECT_ALREADY_PRESENT = "Subject Already Present !";
 }

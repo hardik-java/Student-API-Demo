@@ -7,13 +7,13 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.studentdata.studentdata.entity.Subjects;
+import com.studentdata.studentdata.entity.Marks;
 
 @Repository
 @Transactional
-public interface SubjectRepository extends JpaRepository<Subjects, Long>{
+public interface MarksRepository extends JpaRepository<Marks, Long>{
 
-	@Query("SELECT s FROM Subjects s WHERE s.studentId = :id")
-	List<Subjects> getByStudentId(Long id);
+	@Query("SELECT s FROM Marks s WHERE s.studentId = :id")
+	List<Marks> getByStudentId(Long id);
 
 }

@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -15,13 +14,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import com.studentdata.studentdata.constant.ApplicationConstants;
+import com.studentdata.studentdata.entity.Marks;
 import com.studentdata.studentdata.entity.StudentDto;
 import com.studentdata.studentdata.entity.StudentEntity;
 import com.studentdata.studentdata.entity.StudentResponse;
-import com.studentdata.studentdata.entity.SubjectDto;
-import com.studentdata.studentdata.entity.Subjects;
+import com.studentdata.studentdata.entity.SubjectData;
+import com.studentdata.studentdata.entity.SubjectDataDto;
+import com.studentdata.studentdata.repository.MarksRepository;
 import com.studentdata.studentdata.repository.StudentRepository;
-import com.studentdata.studentdata.repository.SubjectRepository;
+import com.studentdata.studentdata.repository.SubjectDataRepository;
 import com.studentdata.studentdata.service.StudentService;
 
 @Service
@@ -31,7 +32,10 @@ public class StudentServiceImpl implements StudentService {
 	StudentRepository studentRepository;
 
 	@Autowired
-	SubjectRepository subjectRepository;
+	MarksRepository marksRepository;
+	
+	@Autowired
+	SubjectDataRepository subjectdataRepository;
 
 	/**
 	 * This method is used to save student and his/her subject details
@@ -47,7 +51,7 @@ public class StudentServiceImpl implements StudentService {
 		Map<String, Object> responseMap = new HashMap<>();
 		StudentEntity studentEntity = new StudentEntity();
 
-		CompletableFuture<Subjects> saveSubjectData = new CompletableFuture<>();
+		CompletableFuture<Marks> saveSubjectData = new CompletableFuture<>();
 
 		try {
 			studentEntity.setAddress(studentDto.getStudentEntity().getAddress());
@@ -64,15 +68,28 @@ public class StudentServiceImpl implements StudentService {
 			if (!studentDto.getStudentEntity().getSubjects().isEmpty()) {
 				for (Map<String, Double> subject : studentDto.getStudentEntity().getSubjects()) {
 
-					Subjects subjects = new Subjects();
+					Marks marks = new Marks();
 					Set<String> a = subject.keySet();
 					for (String s : a) {
-						subjects.setMarks(subject.get(s));
-						subjects.setSubjectName(s);
+						
+						//Check if subject present in table
+						SubjectData subjectdata =  subjectdataRepository.findbySubjectName(s);
+						
+						if(subjectdata == null) {
+							SubjectData sub = new SubjectData();
+							sub.setSubjectName(s);
+							
+							subjectdata = subjectdataRepository.save(sub);
+						}
+						
+						//subjects.setSubjectName(s);
+						marks.setMarks(subject.get(s));
+						marks.setSubjectId(subjectdata.getId());
+						marks.setStudentId(student.getId());
 					}
-
-					subjects.setStudentId(student.getId());
-					saveSubjectData = CompletableFuture.supplyAsync(() -> subjectRepository.save(subjects));
+					
+					//subjects.setStudentId(student.getId());
+					saveSubjectData = CompletableFuture.supplyAsync(() -> marksRepository.save(marks));
 				}
 			}
 
@@ -114,7 +131,9 @@ public class StudentServiceImpl implements StudentService {
 	public StudentResponse getStudentData(String name) throws Exception {
 		
 		List<Map<String, Double>> subjectMap = new ArrayList<>();
-		List<Subjects> subjectsList = new ArrayList<>();
+		
+		List<Marks> marksList = new ArrayList<>();
+		SubjectData subjectList = null;
 		
 		StudentResponse studentResponseDto = new StudentResponse();
 
@@ -128,15 +147,17 @@ public class StudentServiceImpl implements StudentService {
 					studentResponseDto.setAge(studentEntity.getAge());
 					studentResponseDto.setAddress(studentEntity.getAddress());
 					
-					//Get all subjects of student
-					subjectsList = subjectRepository.getByStudentId(studentEntity.getId());
+					//Get all marks of student
+					marksList = marksRepository.getByStudentId(studentEntity.getId());
 				}
 				
 				//Get subject name with marks
-				for (Subjects subjects : subjectsList) {
+				for (Marks marks : marksList) {
 					Map<String, Double> subjectMapInner = new HashMap<String, Double>();
-					if (subjects != null) {
-						subjectMapInner.put(subjects.getSubjectName(), subjects.getMarks());
+					if (marks != null) {
+						subjectList = subjectdataRepository.getById(marks.getSubjectId());
+						
+						subjectMapInner.put(subjectList.getSubjectName(), marks.getMarks());
 						subjectMap.add(subjectMapInner);
 						
 						studentResponseDto.setSubjects(subjectMap);
@@ -153,52 +174,54 @@ public class StudentServiceImpl implements StudentService {
 	
 	
 	/**
-	 * This method is used to get student and subject list by Student Name
+	 * This method is used to save subject data
 	 * 
-	 * @param studentId
-	 * @param subjects
+	 * @param SubjectDataDto subjects
 	 * 
-	 * return list of student and subject data
+	 * return response
 	 */
 	@Override
 	@Async
-	public CompletableFuture<Map<String, Object>> addSubject(Long studentId, SubjectDto subjects) {
-		CompletableFuture<Subjects> savedSubjectData = new CompletableFuture<>();
+	public CompletableFuture<Map<String, Object>> addSubject(SubjectDataDto subjects) {
+		//CompletableFuture<Subjects> savedSubjectData = new CompletableFuture<>();
 		Map<String, Object> responseMap = new HashMap<>();
+		Boolean isSubjectPresent = Boolean.FALSE;
 		
 		try {
-			Optional<StudentEntity> studentEntityData = studentRepository.findById(studentId);
-			if (studentEntityData.isPresent()) {
 				
-				for (Map<String, Double> subs : subjects.getSubjects()) {
-
-					Subjects subject = new Subjects();
+			for (String subs : subjects.getSubjectData().getSubjects()) {
+				Long subjectdata =  subjectdataRepository.findbyName(subs);
+				
+				if(subjectdata != null && subjectdata > 0) {
 					
-					Set<String> subjectSet = subs.keySet();
-					for (String subjectMapKey : subjectSet) {
-						subject.setMarks(subs.get(subjectMapKey));
-						subject.setSubjectName(subjectMapKey);
-					}
-
-					subject.setStudentId(studentId);
-					savedSubjectData = CompletableFuture.supplyAsync(() -> subjectRepository.save(subject));
+					responseMap.put(ApplicationConstants.RESPONSE_STATUS_STATUS, ApplicationConstants.RESPONSE_STATUS_CODE_OK);
+					responseMap.put(ApplicationConstants.RESPONSE_STATUS_MESSAGE,
+							ApplicationConstants.RESPONSE_STATUS_SUBJECT_ALREADY_PRESENT);
+					responseMap.put(ApplicationConstants.RESPONSE_STATUS_DATA, new ArrayList<>());
+					isSubjectPresent = Boolean.TRUE;
+					
+				} else {
+					SubjectData sub = new SubjectData();
+					sub.setSubjectName(subs);
+					
+					subjectdataRepository.save(sub);
 				}
-				responseMap.put(ApplicationConstants.RESPONSE_STATUS_STATUS, ApplicationConstants.RESPONSE_STATUS_CODE_OK);
-				responseMap.put(ApplicationConstants.RESPONSE_STATUS_MESSAGE,
-						ApplicationConstants.RESPONSE_STATUS_CODE_SUCCESS_MESSAGE);
-				responseMap.put(ApplicationConstants.RESPONSE_STATUS_DATA, new ArrayList<>());
 			}
-			else {
-				responseMap.put(ApplicationConstants.RESPONSE_STATUS_STATUS, ApplicationConstants.RESPONSE_STATUS_CODE_BAD);
-				responseMap.put(ApplicationConstants.RESPONSE_STATUS_MESSAGE,
-						ApplicationConstants.RESPONSE_STATUS_CODE_FAILUR_MESSAGE);
-				responseMap.put(ApplicationConstants.RESPONSE_STATUS_DATA, new ArrayList<>());
+			
+			if(isSubjectPresent) {
+				return CompletableFuture.completedFuture(responseMap);
 			}
+			responseMap.put(ApplicationConstants.RESPONSE_STATUS_STATUS, ApplicationConstants.RESPONSE_STATUS_CODE_OK);
+			responseMap.put(ApplicationConstants.RESPONSE_STATUS_MESSAGE,
+					ApplicationConstants.RESPONSE_STATUS_CODE_SUCCESS_MESSAGE);
+			responseMap.put(ApplicationConstants.RESPONSE_STATUS_DATA, new ArrayList<>());
+			
 		} catch (Exception e) {
 			responseMap.put(ApplicationConstants.RESPONSE_STATUS_STATUS, ApplicationConstants.RESPONSE_STATUS_CODE_BAD);
 			responseMap.put(ApplicationConstants.RESPONSE_STATUS_MESSAGE,
 					ApplicationConstants.RESPONSE_STATUS_CODE_FAILUR_MESSAGE);
 			responseMap.put(ApplicationConstants.RESPONSE_STATUS_DATA, new ArrayList<>());
+			e.printStackTrace();
 		}
 		
 		return CompletableFuture.completedFuture(responseMap);

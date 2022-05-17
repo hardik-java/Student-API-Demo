@@ -1,5 +1,7 @@
 package com.studentdata.studentdata.controller;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -14,9 +16,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.studentdata.studentdata.constant.ApplicationConstants;
 import com.studentdata.studentdata.entity.StudentDto;
 import com.studentdata.studentdata.entity.StudentResponse;
-import com.studentdata.studentdata.entity.SubjectDto;
+import com.studentdata.studentdata.entity.SubjectDataDto;
 import com.studentdata.studentdata.service.StudentService;
 
 @RestController
@@ -48,8 +51,28 @@ public class StudentController {
 	 * @throws Exception 
 	 */
 	@GetMapping("/getData")
-	public StudentResponse getStudentData(@RequestParam("studentName") String studentName) throws Exception {
-		return  studentService.getStudentData(studentName);
+	public ResponseEntity<Map<String, Object>> getStudentData(@RequestParam("studentName") String studentName) throws Exception {
+		
+		Map<String, Object> responseMap = new HashMap<String, Object>();
+		
+		StudentResponse studentResponse =  studentService.getStudentData(studentName);
+		
+		if (studentResponse != null && studentResponse.getName() != null) {
+			
+			responseMap.put(ApplicationConstants.RESPONSE_STATUS_STATUS, ApplicationConstants.RESPONSE_STATUS_CODE_OK);
+			responseMap.put(ApplicationConstants.RESPONSE_STATUS_MESSAGE,
+					ApplicationConstants.RESPONSE_STATUS_CODE_SUCCESS_MESSAGE);
+			responseMap.put(ApplicationConstants.RESPONSE_STATUS_DATA, studentResponse);
+			
+		} else {
+			
+			responseMap.put(ApplicationConstants.RESPONSE_STATUS_STATUS, ApplicationConstants.RESPONSE_STATUS_CODE_BAD);
+			responseMap.put(ApplicationConstants.RESPONSE_STATUS_MESSAGE,
+					ApplicationConstants.RESPONSE_STATUS_CODE_NO_DATA);
+			responseMap.put(ApplicationConstants.RESPONSE_STATUS_DATA, new ArrayList<>());
+		}
+		
+		return new ResponseEntity<Map<String,Object>>(responseMap, HttpStatus.OK);
 	}
 	
 	
@@ -62,8 +85,8 @@ public class StudentController {
 	 * @throws ExecutionException
 	 */
 	@PostMapping("/addSubject")
-	public ResponseEntity<Map<String, Object>> addSubject(@RequestParam("studentId") Long studentId, @RequestBody SubjectDto subjects) throws InterruptedException, ExecutionException {
-		CompletableFuture<Map<String, Object>> studentData = studentService.addSubject(studentId,subjects);
+	public ResponseEntity<Map<String, Object>> addSubject(@RequestBody SubjectDataDto subjects) throws InterruptedException, ExecutionException {
+		CompletableFuture<Map<String, Object>> studentData = studentService.addSubject(subjects);
 		return new ResponseEntity<Map<String,Object>>(studentData.get(), HttpStatus.OK);
 	}
 }
