@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.studentdata.studentdata.entity.StudentDto;
+import com.studentdata.studentdata.entity.StudentResponse;
+import com.studentdata.studentdata.entity.SubjectDto;
 import com.studentdata.studentdata.service.StudentService;
 
 @RestController
@@ -43,12 +45,25 @@ public class StudentController {
 	 * 
 	 * @param name
 	 * @return
+	 * @throws Exception 
+	 */
+	@GetMapping("/getData")
+	public StudentResponse getStudentData(@RequestParam("studentName") String studentName) throws Exception {
+		return  studentService.getStudentData(studentName);
+	}
+	
+	
+	/**
+	 * 
+	 * @param studentId
+	 * @param subjects
+	 * @return
 	 * @throws InterruptedException
 	 * @throws ExecutionException
 	 */
-	@GetMapping("/getData")
-	public ResponseEntity<Map<String, Object>> getStudentData(@RequestParam("studentName") String name) throws InterruptedException, ExecutionException {
-		CompletableFuture<Map<String, Object>> studentData = studentService.getStudentData(name);
+	@PostMapping("/addSubject")
+	public ResponseEntity<Map<String, Object>> addSubject(@RequestParam("studentId") Long studentId, @RequestBody SubjectDto subjects) throws InterruptedException, ExecutionException {
+		CompletableFuture<Map<String, Object>> studentData = studentService.addSubject(studentId,subjects);
 		return new ResponseEntity<Map<String,Object>>(studentData.get(), HttpStatus.OK);
 	}
 }

@@ -1,5 +1,7 @@
 package com.studentdata.studentdata.repository;
 
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -11,7 +13,7 @@ import com.studentdata.studentdata.entity.Subjects;
 @Transactional
 public interface SubjectRepository extends JpaRepository<Subjects, Long>{
 
-	@Query("SELECT s FROM Subjects s WHERE s.studentEntity.id = :id")
-	Subjects getByStudentId(Long id);
+	@Query("SELECT s FROM Subjects s WHERE s.studentId = :id")
+	List<Subjects> getByStudentId(Long id);
 
 }

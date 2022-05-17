@@ -1,6 +1,7 @@
 package com.studentdata.studentdata.entity;
 
 import java.util.List;
+import java.util.Map;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -18,8 +19,11 @@ public class StudentEntity {
 	private String address;
 	private Integer age;
 	
+//	@Transient
+//	private List<Subjects> subjects;
+	
 	@Transient
-	private List<Subjects> subjects;
+	private List<Map<String, Double>> subjects;
 
 	public Long getId() {
 		return id;
@@ -53,12 +57,28 @@ public class StudentEntity {
 		this.age = age;
 	}
 
-	public List<Subjects> getSubjects() {
+	public List<Map<String, Double>> getSubjects() {
 		return subjects;
 	}
 
-	public void setSubjects(List<Subjects> subjects) {
+	public void setSubjects(List<Map<String, Double>> subjects) {
 		this.subjects = subjects;
 	}
+
+	@Override
+	public String toString() {
+		return "StudentEntity [id=" + id + ", name=" + name + ", address=" + address + ", age=" + age + ", subjects="
+				+ subjects + "]";
+	}
+
+//	public List<Subjects> getSubjects() {
+//		return subjects;
+//	}
+//
+//	public void setSubjects(List<Subjects> subjects) {
+//		this.subjects = subjects;
+//	}
+	
+	
 
 }
